@@ -1,0 +1,322 @@
+{
+  "info": {
+    "_postman_id": "7fbd2969-17f5-4861-9b21-fa7b8c8fd8d1",
+    "name": "RAG项目",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50568219",
+    "_collection_link": "https://go.postman.co/collection/50568219-7fbd2969-17f5-4861-9b21-fa7b8c8fd8d1?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "FastAPI",
+      "item": [
+        {
+          "name": "知识库文档上传",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "uuid": "4478806b-dabe-4d10-b67a-996b81cc7754",
+                  "src": "/Users/yuanji/Desktop/example/uv.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{FASTAPI-url}}/knowledge-bases/:user_kb_id/documents",
+              "host": [
+                "{{FASTAPI-url}}"
+              ],
+              "path": [
+                "knowledge-bases",
+                ":user_kb_id",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "user_kb_id",
+                  "value": "test"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "知识库问答",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"message\":\"uv怎么用\",\n    \"history\":[],\n    \"top_k\":10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{FASTAPI-url}}/knowledge-bases/:user_kb_id/chat",
+              "host": [
+                "{{FASTAPI-url}}"
+              ],
+              "path": [
+                "knowledge-bases",
+                ":user_kb_id",
+                "chat"
+              ],
+              "variable": [
+                {
+                  "key": "user_kb_id",
+                  "value": "test"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "GIN",
+      "item": [
+        {
+          "name": "AUTH",
+          "item": [
+            {
+              "name": "获取验证码",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\":\"2419408174@qq.com\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{GIN-url}}/api/v1/user/captcha",
+                  "host": [
+                    "{{GIN-url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "user",
+                    "captcha"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "注册",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\":\"2419408174@qq.com\",\n    \"captcha\":\"529888\",\n    \"password\":\"143737yj\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{GIN-url}}/api/v1/user/register",
+                  "host": [
+                    "{{GIN-url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "user",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "登录",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"username\":\"39707727233\",\n    \"password\":\"143737yj\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{GIN-url}}/api/v1/user/login",
+                  "host": [
+                    "{{GIN-url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "user",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "业务",
+          "item": [
+            {
+              "name": "获取用户所有知识库",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "创建知识库",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "{{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"username\":\"339707727233\",\n    \"kb_name\":\"test_kb\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{GIN-url}}/api/v1/AI/kb/create",
+                  "host": [
+                    "{{GIN-url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "AI",
+                    "kb",
+                    "create"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "获取用户会话列表",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "创建新会话并发送一条消息",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "{{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"username\":\"339707727233\",\n    \"user_question\":\"uv怎么用？\",\n    \"user_kb_id\":\"75791f90-35e3-4dfa-aa61-46299c3a2291\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{GIN-url}}/api/v1/AI/session/create",
+                  "host": [
+                    "{{GIN-url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "AI",
+                    "session",
+                    "create"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "向已有会话发送消息",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "FASTAPI-url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "GIN-url",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiIzOTcwNzcyNzIzMyIsImlzcyI6Inl1YW5qaSIsInN1YiI6IkdvcGhlckFJIiwiZXhwIjoxODA2NDYzNDM2LCJpYXQiOjE3NzQ5Mjc0MzZ9.wS40hAKVsmTRkcyHJ2Y_FJhH2YXnRMTAPKWdiWdtrb8"
+    }
+  ]
+}

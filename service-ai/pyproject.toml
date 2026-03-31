@@ -1,0 +1,17 @@
+[project]
+name = "featherrag"
+version = "0.1.0"
+description = "an complete RAG pipeline including load, chunk, embed, retrive with high precision "
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=1.2.13",
+    "langchain-openai>=1.1.11",
+    "langchain-qdrant>=1.1.0",
+    "langchain-text-splitters>=1.1.1",
+    "langchain-unstructured>=1.0.1",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "python-multipart>=0.0.12",
+    "python-dotenv>=1.0.0",
+    "langchain-opendataloader-pdf>=2.0.0",
+]
