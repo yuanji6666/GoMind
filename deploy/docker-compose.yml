@@ -13,11 +13,10 @@ services:
     image: mysql:latest
     restart: unless-stopped
     environment:
-      # 生产环境请在 .env 中显式设置，勿使用默认口令
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-143737yj}
-      MYSQL_DATABASE: ${MYSQL_DB_NAME:-gopherAI}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB_NAME}
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${MYSQL_PORT}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     command:
@@ -34,7 +33,7 @@ services:
     image: redis:latest
     restart: unless-stopped
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -48,8 +47,8 @@ services:
     image: qdrant/qdrant:latest
     restart: unless-stopped
     ports:
-      - "${QDRANT_HTTP_PORT:-6333}:6333"
-      - "${QDRANT_GRPC_PORT:-6334}:6334"
+      - "${QDRANT_HTTP_PORT}:6333"
+      - "${QDRANT_GRPC_PORT}:6334"
     volumes:
       - qdrant_storage:/qdrant/storage
 
@@ -66,7 +65,7 @@ services:
       # 覆盖 .env 中的 localhost，使容器内访问 Qdrant 使用服务名
       QDRANT_URL: http://qdrant:6333
     ports:
-      - "${SERVICE_AI_PORT:-8000}:8000"
+      - "${SERVICE_AI_PORT}:8000"
 
   server-go:
     build:
@@ -93,7 +92,7 @@ services:
       RAG_HOST: service-ai
       RAG_PORT: "8000"
     ports:
-      - "${SERVER_GO_PORT:-3000}:3000"
+      - "${SERVER_GO_PORT}:3000"
 
   web-frontend:
     build:
@@ -104,7 +103,7 @@ services:
       - server-go
       - service-ai
     ports:
-      - "${WEB_FRONTEND_PORT:-80}:80"
+      - "${WEB_FRONTEND_PORT}:80"
 
 volumes:
   mysql_data:
