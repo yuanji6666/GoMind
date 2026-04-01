@@ -14,6 +14,7 @@ type Message struct {
 }
 
 type History struct {
+	ID		uint   `json:"id"`
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }

@@ -9,6 +9,9 @@ import (
 	"github.com/yuanji6666/gopherAI/schema"
 	daoSession "github.com/yuanji6666/gopherAI/dao/session"
 	serviceSession "github.com/yuanji6666/gopherAI/service/session"
+	serviceMessage "github.com/yuanji6666/gopherAI/service/message"
+
+
 )
 type(
 	GetUserSessionsByUserNameRequest struct{
@@ -35,6 +38,16 @@ type(
 	SendMessageResponse struct{
 		controller.Response
 		Answer string `json:"answer"`
+	}
+	GetHistoryBySessionIDWithIDRequest struct{
+		SessionID string `json:"session_id" binding:"required"`
+		// last_id=0 表示从最早一条开始；required 会把数值 0 判为未填，故不能用 required
+		LastID int64 `json:"last_id" binding:"gte=0"`
+		Limit  int   `json:"limit" binding:"required,gte=1"`
+	}
+	GetHistoryBySessionIDWithIDResponse struct{
+		controller.Response
+		History []schema.History `json:"history"`
 	}
 )
 
@@ -99,6 +112,24 @@ func SendMessage(c *gin.Context) {
 		return
 	}
 	res.Answer = answer
+	res.Success()
+	c.JSON(http.StatusOK, res)
+}
+
+func GetHistoryBySessionIDWithID(c *gin.Context) {
+	var req GetHistoryBySessionIDWithIDRequest
+	var res GetHistoryBySessionIDWithIDResponse
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusOK, res.CodeOf(code.CodeInvalidParams))
+		return
+	}
+	history, err := serviceMessage.GetHistoryBySessionIDWithID(req.SessionID, req.LastID, req.Limit)
+	if err != code.CodeSuccess {
+		c.JSON(http.StatusOK, res.CodeOf(err))
+		return
+	}	
+
+	res.History = history
 	res.Success()
 	c.JSON(http.StatusOK, res)
 }

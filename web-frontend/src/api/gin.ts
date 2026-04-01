@@ -14,6 +14,8 @@ import type {
   CreateSessionResponse,
   SendMessageRequest,
   SendMessageResponse,
+  SessionHistoryRequest,
+  SessionHistoryResponse,
 } from './types'
 
 export async function login(data: LoginRequest) {
@@ -53,5 +55,11 @@ export async function createSession(data: CreateSessionRequest) {
 
 export async function sendMessage(data: SendMessageRequest) {
   const res = await ginClient.post<SendMessageResponse>('/api/v1/AI/session/send', data)
+  return res.data
+}
+
+/** last_id=0 拉取最新一页；last_id=当前已加载最早一条的 id 时向前翻更早消息 */
+export async function getSessionHistory(data: SessionHistoryRequest) {
+  const res = await ginClient.post<SessionHistoryResponse>('/api/v1/AI/session/history', data)
   return res.data
 }

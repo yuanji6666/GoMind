@@ -85,20 +85,22 @@ func CreateNewSessionAndSendMessage(userName, userQuestion, userKBID string) (st
 		pipe.Expire(ctx, key, 20*time.Minute)
 		pipe.Exec(ctx)
 	}()
+	go func(){
+		message.CreateMessage(&schema.Message{
+			SessionID: newSession.ID,
+			UserName: userName,
+			Content: userQuestion,
+			IsUser: true,
+		})
+		
+		message.CreateMessage(&schema.Message{
+			SessionID: newSession.ID,
+			UserName: userName,
+			Content: answer.Answer,
+			IsUser: false,
+		})
+	}()
 
-	go message.CreateMessage(&schema.Message{
-		SessionID: newSession.ID,
-		UserName: userName,
-		Content: userQuestion,
-		IsUser: true,
-	})
-	
-	go message.CreateMessage(&schema.Message{
-		SessionID: newSession.ID,
-		UserName: userName,
-		Content: answer.Answer,
-		IsUser: false,
-	})
 	
 	
 	return newSession.ID, answer.Answer, code.CodeSuccess
@@ -170,19 +172,21 @@ func SendMessage(userQuestion, SessionID string) (string, code.Code) {
 	}()
 
 	// 消息持久化到数据库
-	go message.CreateMessage(&schema.Message{
-		SessionID: SessionID,
-		UserName: session.UserName,
-		Content: userQuestion,
-		IsUser: true,
-	})
-	
-	go message.CreateMessage(&schema.Message{
-		SessionID: SessionID,
-		UserName: session.UserName,
-		Content: answer.Answer,
-		IsUser: false,
-	})
+	go func(){
+		message.CreateMessage(&schema.Message{
+			SessionID: SessionID,
+			UserName: session.UserName,
+			Content: userQuestion,
+			IsUser: true,
+		})
+		
+		message.CreateMessage(&schema.Message{
+			SessionID: SessionID,
+			UserName: session.UserName,
+			Content: answer.Answer,
+			IsUser: false,
+		})
+	}()
 
 	return answer.Answer, code.CodeSuccess
 }

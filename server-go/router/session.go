@@ -9,4 +9,5 @@ func RegisterSessionRouter(r * gin.RouterGroup) {
 	r.GET("/session/list", session.GetUserSessionsByUserName)
 	r.POST("/session/create", session.CreateNewSessionAndSendMessage)
 	r.POST("/session/send", session.SendMessage)
+	r.POST("/session/history", session.GetHistoryBySessionIDWithID)
 }

@@ -38,9 +38,13 @@ func ParseToken(token string)(string, bool){
 		return []byte(config.GetConfig().Key), nil
 	})
 
-	if !t.Valid || err != nil || claims == nil {
+	// 解析失败时 t 可能为 nil，必须先判断 err / t，再访问 t.Valid，否则会 nil 解引用 panic
+	if err != nil {
 		return "", false
-	} 
+	}
+	if t == nil || !t.Valid {
+		return "", false
+	}
 
 	return claims.Username, true
 }

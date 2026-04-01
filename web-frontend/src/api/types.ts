@@ -82,6 +82,22 @@ export interface SendMessageResponse extends GinResponse {
   answer?: string
 }
 
+export interface SessionHistoryRequest {
+  session_id: string
+  last_id: number
+  limit: number
+}
+
+export interface HistoryItem {
+  id: number
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export interface SessionHistoryResponse extends GinResponse {
+  history?: HistoryItem[]
+}
+
 // FastAPI
 export interface UploadResponse {
   status: string

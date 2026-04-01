@@ -8,6 +8,9 @@ interface ChatState {
   activeSession: SessionInfo | null
   messages: Record<string, ChatMessage[]>
   loading: boolean
+  /** 该会话是否还有更早消息可拉（游标分页） */
+  historyHasMore: Record<string, boolean>
+  historyLoadingMore: Record<string, boolean>
 
   setKnowledgeBases: (kbs: KnowledgeBaseInfo[]) => void
   setSessions: (sessions: SessionInfo[]) => void
@@ -16,6 +19,12 @@ interface ChatState {
   addSession: (session: SessionInfo) => void
   addKB: (kb: KnowledgeBaseInfo) => void
   pushMessage: (sessionId: string, msg: ChatMessage) => void
+  /** 覆盖某会话消息列表（如首次从服务端拉历史） */
+  setSessionMessages: (sessionId: string, msgs: ChatMessage[]) => void
+  /** 在列表头部插入更早的消息 */
+  prependMessages: (sessionId: string, msgs: ChatMessage[]) => void
+  setHistoryHasMore: (sessionId: string, hasMore: boolean) => void
+  setHistoryLoadingMore: (sessionId: string, loading: boolean) => void
   setLoading: (v: boolean) => void
   clearMessages: () => void
 }
@@ -27,6 +36,8 @@ export const useChatStore = create<ChatState>((set) => ({
   activeSession: null,
   messages: {},
   loading: false,
+  historyHasMore: {},
+  historyLoadingMore: {},
 
   setKnowledgeBases: (kbs) => set({ knowledgeBases: kbs }),
 
@@ -50,7 +61,31 @@ export const useChatStore = create<ChatState>((set) => ({
       },
     })),
 
+  setSessionMessages: (sessionId, msgs) =>
+    set((s) => ({
+      messages: { ...s.messages, [sessionId]: msgs },
+    })),
+
+  prependMessages: (sessionId, older) =>
+    set((s) => ({
+      messages: {
+        ...s.messages,
+        [sessionId]: [...older, ...(s.messages[sessionId] || [])],
+      },
+    })),
+
+  setHistoryHasMore: (sessionId, hasMore) =>
+    set((s) => ({
+      historyHasMore: { ...s.historyHasMore, [sessionId]: hasMore },
+    })),
+
+  setHistoryLoadingMore: (sessionId, loading) =>
+    set((s) => ({
+      historyLoadingMore: { ...s.historyLoadingMore, [sessionId]: loading },
+    })),
+
   setLoading: (v) => set({ loading: v }),
 
-  clearMessages: () => set({ messages: {} }),
+  clearMessages: () =>
+    set({ messages: {}, historyHasMore: {}, historyLoadingMore: {} }),
 }))

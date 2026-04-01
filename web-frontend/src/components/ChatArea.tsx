@@ -1,12 +1,35 @@
-import { useState, useRef, useEffect } from 'react'
-import { Send, Sparkles, MessageSquarePlus } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { Send, Sparkles, MessageSquarePlus, History } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { createSession, sendMessage } from '@/api/gin'
+import { createSession, sendMessage, getSessionHistory } from '@/api/gin'
 import { CODE_SUCCESS } from '@/api/types'
-import type { ChatMessage } from '@/api/types'
+import type { ChatMessage, HistoryItem } from '@/api/types'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useChatStore } from '@/store/useChatStore'
 import MessageBubble from './MessageBubble'
+
+const HISTORY_PAGE_SIZE = 20
+
+function historyItemsToMessages(items: HistoryItem[]): ChatMessage[] {
+  return items.map((h) => ({
+    id: String(h.id),
+    content: h.content,
+    isUser: h.role === 'user',
+    timestamp: new Date(),
+  }))
+}
+
+/** 当前列表里服务端消息的最小 id，用于 last_id 游标加载更早消息 */
+function minServerMessageId(messages: ChatMessage[]): number | null {
+  let m: number | null = null
+  for (const msg of messages) {
+    const n = Number(msg.id)
+    if (Number.isInteger(n) && n > 0) {
+      if (m === null || n < m) m = n
+    }
+  }
+  return m
+}
 
 function ThinkingIndicator() {
   return (
@@ -32,17 +55,115 @@ export default function ChatArea() {
     activeSession,
     messages,
     loading,
+    historyHasMore,
+    historyLoadingMore,
     setActiveSession,
     addSession,
     pushMessage,
     setLoading,
+    setSessionMessages,
+    prependMessages,
+    setHistoryHasMore,
+    setHistoryLoadingMore,
   } = useChatStore()
 
   const [input, setInput] = useState('')
+  const [historyBootstrapping, setHistoryBootstrapping] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const topSentinelRef = useRef<HTMLDivElement>(null)
 
   const currentMessages = activeSession ? messages[activeSession.session_id] || [] : []
+  const sid = activeSession?.session_id
+  const hasMore = sid ? historyHasMore[sid] ?? false : false
+  const loadingMore = sid ? historyLoadingMore[sid] ?? false : false
+
+  const loadOlderHistory = useCallback(
+    async (lastId: number) => {
+      if (!sid || sid.startsWith('temp-')) return
+      setHistoryLoadingMore(sid, true)
+      try {
+        const res = await getSessionHistory({
+          session_id: sid,
+          last_id: lastId,
+          limit: HISTORY_PAGE_SIZE,
+        })
+        if (res.status_code !== CODE_SUCCESS || res.history == null) {
+          toast.error(res.status_msg || '加载历史失败')
+          return
+        }
+        const chunk = historyItemsToMessages(res.history)
+        const got = res.history.length
+        const el = scrollRef.current
+        const prevH = el?.scrollHeight ?? 0
+        prependMessages(sid, chunk)
+        requestAnimationFrame(() => {
+          if (el) el.scrollTop += el.scrollHeight - prevH
+        })
+        setHistoryHasMore(sid, got === HISTORY_PAGE_SIZE)
+      } catch {
+        toast.error('加载历史失败')
+      } finally {
+        setHistoryLoadingMore(sid, false)
+      }
+    },
+    [sid, prependMessages, setHistoryHasMore, setHistoryLoadingMore],
+  )
+
+  // 切换会话：首屏 last_id=0，拉最新一页
+  useEffect(() => {
+    if (!sid || sid.startsWith('temp-')) return
+    let cancelled = false
+    setHistoryBootstrapping(true)
+    ;(async () => {
+      try {
+        const res = await getSessionHistory({
+          session_id: sid,
+          last_id: 0,
+          limit: HISTORY_PAGE_SIZE,
+        })
+        if (cancelled) return
+        if (res.status_code !== CODE_SUCCESS || res.history == null) {
+          toast.error(res.status_msg || '加载历史失败')
+          return
+        }
+        setSessionMessages(sid, historyItemsToMessages(res.history))
+        setHistoryHasMore(sid, res.history.length === HISTORY_PAGE_SIZE)
+      } catch {
+        if (!cancelled) toast.error('加载历史失败')
+      } finally {
+        if (!cancelled) setHistoryBootstrapping(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [sid, setSessionMessages, setHistoryHasMore])
+
+  const canLoadOlder = useMemo(
+    () => Boolean(sid && !sid.startsWith('temp-') && hasMore && !loadingMore && !historyBootstrapping),
+    [sid, hasMore, loadingMore, historyBootstrapping],
+  )
+
+  useEffect(() => {
+    const root = scrollRef.current
+    const sentinel = topSentinelRef.current
+    if (!root || !sentinel || !sid || sid.startsWith('temp-')) return
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0]
+        if (!e?.isIntersecting || !canLoadOlder) return
+        const minId = minServerMessageId(useChatStore.getState().messages[sid] || [])
+        if (minId == null) return
+        loadOlderHistory(minId)
+      },
+      { root, rootMargin: '100px 0px 0px 0px', threshold: 0 },
+    )
+    obs.observe(sentinel)
+    return () => obs.disconnect()
+  }, [sid, canLoadOlder, loadOlderHistory])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -175,9 +296,35 @@ export default function ChatArea() {
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto py-6 space-y-5">
-        {currentMessages.length === 0 && !loading && (
-          <div className="flex items-center justify-center h-full">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto py-6 space-y-5">
+        {activeSession && !activeSession.session_id.startsWith('temp-') && (
+          <div ref={topSentinelRef} className="h-px w-full flex-shrink-0" aria-hidden />
+        )}
+        {historyBootstrapping && (
+          <div className="flex justify-center py-8 text-sm text-gray-400">正在同步会话记录…</div>
+        )}
+        {loadingMore && (
+          <div className="flex justify-center py-2 text-xs text-gray-400">加载更早的消息…</div>
+        )}
+        {hasMore && !loadingMore && !historyBootstrapping && currentMessages.length > 0 && (
+          <div className="flex justify-center pb-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (!sid || loadingMore || !hasMore || historyBootstrapping) return
+                const minId = minServerMessageId(currentMessages)
+                if (minId == null) return
+                loadOlderHistory(minId)
+              }}
+              className="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-500"
+            >
+              <History className="w-3.5 h-3.5" />
+              加载更早的消息
+            </button>
+          </div>
+        )}
+        {currentMessages.length === 0 && !loading && !loadingMore && !historyBootstrapping && (
+          <div className="flex items-center justify-center h-full min-h-[200px]">
             <div className="text-center">
               <Sparkles className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-400 text-sm">输入您的问题，开始与知识库对话</p>
