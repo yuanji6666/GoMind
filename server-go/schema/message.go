@@ -14,6 +14,6 @@ type Message struct {
 }
 
 type History struct {
-	IsUser  bool   `json:"is_user"`
+	Role    string `json:"role"`
 	Content string `json:"content"`
 }
