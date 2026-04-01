@@ -16,8 +16,6 @@ services:
       # 生产环境请在 .env 中显式设置，勿使用默认口令
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-143737yj}
       MYSQL_DATABASE: ${MYSQL_DB_NAME:-gopherAI}
-      MYSQL_USER: ${MYSQL_USER:-gopher}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-changeme}
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
