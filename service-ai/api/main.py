@@ -17,8 +17,8 @@ from pathlib import Path
 from fastapi import APIRouter, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.schemas import ChatRequest, ChatResponse
-from api.service import (
+from strategy.schemas import ChatRequest, ChatResponse
+from strategy.service import (
     chat_with_kb,
 )
 

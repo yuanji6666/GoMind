@@ -26,6 +26,7 @@ COPY pyproject.toml uv.lock ./
 COPY api ./api
 COPY globals ./globals
 COPY pipeline ./pipeline
+COPY strategy ./strategy
 COPY env_loader.py ./
 
 RUN uv sync --frozen --no-dev

@@ -1,5 +1,6 @@
 from pipeline.utils.approx_token import approx_token
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 
 def _split_markdown_to_paragraphs(text: str) -> list[dict]:
     """
