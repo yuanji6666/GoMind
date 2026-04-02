@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"encoding/json"
@@ -122,11 +123,33 @@ func SendMessage(userQuestion, SessionID string) (string, code.Code) {
 	}
 	
 	history := make([]map[string]string, len(historyMsgs))
-	for i, msg := range historyMsgs {
-		json.Unmarshal([]byte(msg), &history[i])
+
+	if len(historyMsgs) != 0 {
+		// 缓存命中，直接从redis获取历史消息
+		for i, msg := range historyMsgs {
+			json.Unmarshal([]byte(msg), &history[i])
+		}
+	} else {
+		// 缓存未命中，从数据库获取历史消息
+		messages, err := message.GetMessagesBySessionID(SessionID, math.MaxInt64, 10)
+		if err != nil {
+			log.Println("GetMessagesBySessionID error:", err)
+			return "", code.CodeServerBusy
+		}
+		for _, msg := range messages {
+			if msg.IsUser {
+				history = append(history, map[string]string{
+					"role":    "user",
+					"content": msg.Content,
+				})
+			} else {
+				history = append(history, map[string]string{
+					"role":    "assistant",
+					"content": msg.Content,
+				})
+			}
+		}
 	}
-	
-	fmt.Println(history)
 
 	
 	url := fmt.Sprintf("http://%s:%s", config.GetConfig().RAGConfig.Host, config.GetConfig().RAGConfig.Port)
