@@ -55,7 +55,7 @@ class RagPipeline:
         for doc in document:
             doc.metadata["user_kb_id"] = user_kb_id
         
-        document_chunks = langchain_split_documents(document,200)
+        document_chunks = langchain_split_documents(document,800)
         self.qdrant_store.add_documents(document_chunks)
     
     def search(
