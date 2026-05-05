@@ -1,0 +1,975 @@
+{
+  "info": {
+    "_postman_id": "gomind-api-v2",
+    "name": "GoMind API - X Platform Clone",
+    "description": "GoMind API 完整接口规范，模仿X平台功能。包括用户、帖子、评论、关注、点赞等核心功能。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "认证 (Authentication)",
+      "item": [
+        {
+          "name": "获取验证码",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/captcha",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", "captcha"]
+            }
+          }
+        },
+        {
+          "name": "用户注册",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"username\": \"newuser\",\n  \"password\": \"password123\",\n  \"captcha\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/register",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "用户登录",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/login",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "用户 (User)",
+      "item": [
+        {
+          "name": "获取当前用户信息",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/me",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", "me"]
+            }
+          }
+        },
+        {
+          "name": "获取用户信息",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "更新用户信息",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Hello World\",\n  \"location\": \"Beijing\",\n  \"website\": \"https://example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "上传头像",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": "avatar.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId/avatar",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId", "avatar"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "上传封面",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "cover",
+                  "type": "file",
+                  "src": "cover.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId/cover",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId", "cover"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取用户的帖子",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId/posts?page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId", "posts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取用户赞过的帖子",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId/likes?page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId", "likes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "帖子 (Post)",
+      "item": [
+        {
+          "name": "获取主页时间线",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts/feed?page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts", "feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取探索时间线",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts/explore?page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts", "explore"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取单个帖子详情",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts/:postId",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts", ":postId"],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "post-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "创建帖子",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "content",
+                  "value": "Hello World!",
+                  "type": "text"
+                },
+                {
+                  "key": "images[0]",
+                  "type": "file",
+                  "src": "image1.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts"]
+            }
+          }
+        },
+        {
+          "name": "删除帖子",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts/:postId",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts", ":postId"],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "post-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "搜索帖子",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts/search?query=golang&page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "golang"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "点赞 (Like)",
+      "item": [
+        {
+          "name": "点赞帖子",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts/:postId/like",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts", ":postId", "like"],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "post-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "取消点赞帖子",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts/:postId/like",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts", ":postId", "like"],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "post-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "点赞评论",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/comments/:commentId/like",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "comments", ":commentId", "like"],
+              "variable": [
+                {
+                  "key": "commentId",
+                  "value": "comment-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "取消点赞评论",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/comments/:commentId/like",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "comments", ":commentId", "like"],
+              "variable": [
+                {
+                  "key": "commentId",
+                  "value": "comment-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取赞过某帖子的用户",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts/:postId/likes?page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts", ":postId", "likes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "post-uuid"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "评论 (Comment)",
+      "item": [
+        {
+          "name": "获取帖子的评论列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts/:postId/comments?page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts", ":postId", "comments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "post-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "创建评论",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "content",
+                  "value": "Great post!",
+                  "type": "text"
+                },
+                {
+                  "key": "images[0]",
+                  "type": "file",
+                  "src": "image.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{API_URL}}/api/v1/posts/:postId/comments",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "posts", ":postId", "comments"],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "post-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "删除评论",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/comments/:commentId",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "comments", ":commentId"],
+              "variable": [
+                {
+                  "key": "commentId",
+                  "value": "comment-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取评论的回复",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/comments/:commentId/replies?page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "comments", ":commentId", "replies"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "commentId",
+                  "value": "comment-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "回复评论",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "content",
+                  "value": "Nice comment!",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{API_URL}}/api/v1/comments/:commentId/replies",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "comments", ":commentId", "replies"],
+              "variable": [
+                {
+                  "key": "commentId",
+                  "value": "comment-uuid"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "关注 (Follow)",
+      "item": [
+        {
+          "name": "关注用户",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId/follow",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId", "follow"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "取消关注用户",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId/follow",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId", "follow"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取用户的粉丝列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId/followers?page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId", "followers"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取用户的关注列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId/following?page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId", "following"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "检查是否关注用户",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/user/:userId/following-status",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "user", ":userId", "following-status"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "通知 (Notification)",
+      "item": [
+        {
+          "name": "获取通知列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/notifications?page=1&pageSize=20",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "notifications"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "标记通知为已读",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/notifications/:notificationId/read",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "notifications", ":notificationId", "read"],
+              "variable": [
+                {
+                  "key": "notificationId",
+                  "value": "notif-uuid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "标记所有通知为已读",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{API_URL}}/api/v1/notifications/read-all",
+              "host": ["{{API_URL}}"],
+              "path": ["api", "v1", "notifications", "read-all"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "API_URL",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "TOKEN",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
