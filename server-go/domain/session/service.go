@@ -2,38 +2,37 @@ package session
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
 	"time"
 
-	"encoding/json"
-
 	"github.com/google/uuid"
 	"github.com/yuanji6666/gopherAI/common/code"
 	"github.com/yuanji6666/gopherAI/common/redis"
 	"github.com/yuanji6666/gopherAI/config"
-	"github.com/yuanji6666/gopherAI/dao/message"
-	"github.com/yuanji6666/gopherAI/dao/session"
-	"github.com/yuanji6666/gopherAI/schema"
+	"github.com/yuanji6666/gopherAI/domain/message"
 	"resty.dev/v3"
 )
+
+// Service 业务逻辑层
 
 type ChatResponse struct {
 	Answer string `json:"answer"`
 }
 
-// CreateSessionAndSendMessage 创建新会话并发送消息，返回会话ID，第一条回复，状态码
+// CreateNewSessionAndSendMessage 创建新会话并发送消息，返回会话ID，第一条回复，状态码
 func CreateNewSessionAndSendMessage(userName, userQuestion, userKBID string) (string, string, code.Code) {
 	// 新建会话存储在数据库
-	newSession := &schema.Session{
+	newSession := &Session{
 		ID:       uuid.New().String(),
 		UserName: userName,
 		UserKBID: userKBID,
 		Title:    userQuestion,
 	}
 
-	_, err := session.CreateSession(newSession)
+	_, err := CreateSession(newSession)
 
 	if err != nil {
 		log.Println("CreateSessionAndSendMessage CreateSession error:", err)
@@ -50,10 +49,10 @@ func CreateNewSessionAndSendMessage(userName, userQuestion, userKBID string) (st
 		SetBody(map[string]interface{}{
 			"message": userQuestion,
 			"history": []map[string]string{},
-			"top_k": 4,
+			"top_k":   4,
 		}).
 		SetResult(answer).
-		Post(url+"/knowledge-bases/"+userKBID+"/chat")
+		Post(url + "/knowledge-bases/" + userKBID + "/chat")
 	if err != nil {
 		log.Println("RAG request error:", err)
 		return newSession.ID, "", code.CodeServerBusy
@@ -62,23 +61,22 @@ func CreateNewSessionAndSendMessage(userName, userQuestion, userKBID string) (st
 		log.Printf("RAG request failed: status=%d body=%s", resp.StatusCode(), resp.String())
 		return newSession.ID, "", code.CodeServerBusy
 	}
-	
+
 	// 消息持久化到redis
-	key := "session:"+newSession.ID
+	key := "session:" + newSession.ID
 	ctx := context.Background()
-	
-	userMsg, err := json.Marshal(schema.History{
-		Role: "user",
+
+	userMsg, err := json.Marshal(message.History{
+		Role:    "user",
 		Content: userQuestion,
 	})
-	
-	assistantMsg, err := json.Marshal(schema.History{
-		Role: "assistant",
+
+	assistantMsg, err := json.Marshal(message.History{
+		Role:    "assistant",
 		Content: answer.Answer,
 	})
 
-
-	// 消息持久化到数据库
+	// 消息持久化到redis
 	go func() {
 		pipe := redis.Rdb.Pipeline()
 		pipe.RPush(ctx, key, userMsg, assistantMsg)
@@ -86,42 +84,41 @@ func CreateNewSessionAndSendMessage(userName, userQuestion, userKBID string) (st
 		pipe.Expire(ctx, key, 20*time.Minute)
 		pipe.Exec(ctx)
 	}()
-	go func(){
-		message.CreateMessage(&schema.Message{
+	// 消息持久化到数据库
+	go func() {
+		message.CreateMessage(&message.Message{
 			SessionID: newSession.ID,
-			UserName: userName,
-			Content: userQuestion,
-			IsUser: true,
+			UserName:  userName,
+			Content:   userQuestion,
+			IsUser:    true,
 		})
-		
-		message.CreateMessage(&schema.Message{
+
+		message.CreateMessage(&message.Message{
 			SessionID: newSession.ID,
-			UserName: userName,
-			Content: answer.Answer,
-			IsUser: false,
+			UserName:  userName,
+			Content:   answer.Answer,
+			IsUser:    false,
 		})
 	}()
 
-	
-	
 	return newSession.ID, answer.Answer, code.CodeSuccess
 }
 
 // SendMessage 发送消息的业务逻辑
 func SendMessage(userQuestion, SessionID string) (string, code.Code) {
-	session, err:= session.GetSessionByID(SessionID)
+	sessionEntity, err := GetSessionByID(SessionID)
 	if err != nil {
 		log.Println("GetSessionByID error:", err)
 		return "", code.CodeServerBusy
 	}
-	
+
 	// 获取历史消息
 	historyMsgs, err := redis.Rdb.LRange(context.Background(), "session:"+SessionID, 0, -1).Result()
 	if err != nil {
 		log.Println("LRange error:", err)
 		return "", code.CodeServerBusy
 	}
-	
+
 	history := make([]map[string]string, len(historyMsgs))
 
 	if len(historyMsgs) != 0 {
@@ -151,7 +148,6 @@ func SendMessage(userQuestion, SessionID string) (string, code.Code) {
 		}
 	}
 
-	
 	url := fmt.Sprintf("http://%s:%s", config.GetConfig().RAGConfig.Host, config.GetConfig().RAGConfig.Port)
 	client := resty.New()
 	defer client.Close()
@@ -160,11 +156,11 @@ func SendMessage(userQuestion, SessionID string) (string, code.Code) {
 		SetBody(map[string]interface{}{
 			"message": userQuestion,
 			"history": history,
-			"top_k": 4,
+			"top_k":   4,
 		}).
 		SetResult(answer).
-		Post(url+"/knowledge-bases/"+session.UserKBID+"/chat")
-	
+		Post(url + "/knowledge-bases/" + sessionEntity.UserKBID + "/chat")
+
 	if err != nil {
 		log.Println("RAG request error:", err)
 		return "", code.CodeServerBusy
@@ -173,18 +169,18 @@ func SendMessage(userQuestion, SessionID string) (string, code.Code) {
 		log.Printf("RAG request failed: status=%d body=%s", resp.StatusCode(), resp.String())
 		return "", code.CodeServerBusy
 	}
-	
+
 	// 消息持久化到redis
-	key := "session:"+SessionID
+	key := "session:" + SessionID
 	ctx := context.Background()
-	
+
 	go func() {
-		userMsg, _ := json.Marshal(schema.History{
-			Role: "user",
+		userMsg, _ := json.Marshal(message.History{
+			Role:    "user",
 			Content: userQuestion,
 		})
-		assistantMsg, _ := json.Marshal(schema.History{
-			Role: "assistant",
+		assistantMsg, _ := json.Marshal(message.History{
+			Role:    "assistant",
 			Content: answer.Answer,
 		})
 		pipe := redis.Rdb.Pipeline()
@@ -195,19 +191,19 @@ func SendMessage(userQuestion, SessionID string) (string, code.Code) {
 	}()
 
 	// 消息持久化到数据库
-	go func(){
-		message.CreateMessage(&schema.Message{
+	go func() {
+		message.CreateMessage(&message.Message{
 			SessionID: SessionID,
-			UserName: session.UserName,
-			Content: userQuestion,
-			IsUser: true,
+			UserName:  sessionEntity.UserName,
+			Content:   userQuestion,
+			IsUser:    true,
 		})
-		
-		message.CreateMessage(&schema.Message{
+
+		message.CreateMessage(&message.Message{
 			SessionID: SessionID,
-			UserName: session.UserName,
-			Content: answer.Answer,
-			IsUser: false,
+			UserName:  sessionEntity.UserName,
+			Content:   answer.Answer,
+			IsUser:    false,
 		})
 	}()
 

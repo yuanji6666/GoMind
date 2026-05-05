@@ -6,6 +6,10 @@ import (
 	"github.com/yuanji6666/gopherAI/common/mysql"
 	"github.com/yuanji6666/gopherAI/common/redis"
 	"github.com/yuanji6666/gopherAI/config"
+	"github.com/yuanji6666/gopherAI/domain/kb"
+	"github.com/yuanji6666/gopherAI/domain/message"
+	"github.com/yuanji6666/gopherAI/domain/session"
+	"github.com/yuanji6666/gopherAI/domain/user"
 	"github.com/yuanji6666/gopherAI/router"
 )
 
@@ -15,16 +19,18 @@ func main() {
 	if err := mysql.InitMysql(); err != nil {
 		log.Panic("mysql Init error", err)
 	}
-	
-	redis.InitRedis()
-	
-	
-	/*
-	err := readDataFromDB()
-	if err != nil {
-		return
+
+	// 在 InitMysql 建立 DB 连接后，由 main 提供 domain 的模型给迁移函数，避免循环依赖
+	if err := mysql.RunMigration(
+		new(user.User),
+		new(message.Message),
+		new(session.Session),
+		new(kb.KnowledgeBase),
+	); err != nil {
+		log.Panic("database migration error", err)
 	}
-	*/
+
+	redis.InitRedis()
 
 	r := router.InitRouter()
 
@@ -34,30 +40,3 @@ func main() {
 	}
 }
 
-/*
-func readDataFromDB() error {
-	messages, err := message.GetAllMessages()
-
-	if err != nil {
-
-		return err
-	}
-
-	for i := range messages {
-		msg := messages[i]
-		modelType := "1"
-		config := map[string]interface{}{}
-		helper, err := manager.GetOrCreateAIHelper(msg.UserName, msg.SessionID, modelType, config)
-		if err != nil {
-			log.Printf("[readDataFromDB] failed to create helper for user=%s session=%s: %v", msg.UserName, msg.SessionID, err)
-			return err
-		}
-		log.Println("readDataFromDB init:  ", helper.SessionID)
-		helper.AddMessage(msg.UserName, msg.Content, msg.IsUser, false)
-	}
-
-	log.Println("AIHelperManager init success ")
-	return nil
-
-}
-*/

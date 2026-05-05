@@ -7,8 +7,6 @@ import (
 	"math/rand"
 	"strconv"
 	"time"
-
-	"github.com/yuanji6666/gopherAI/schema"
 )
 
 // GetRandomNumbers 调用rand标准库生成num位随机数
@@ -29,13 +27,4 @@ func MD5(src string) string {
 	m := md5.New()
 	m.Write([]byte(src))
 	return hex.EncodeToString(m.Sum(nil))
-}
-
-// ConvertToModelMessage 将schema.Message转化为model.Message
-func ConvertToModelMessage(sessionID string, username string, msg *schema.Message) *schema.Message {
-	return &schema.Message{
-		SessionID: sessionID,
-		UserName:  username,
-		Content:   msg.Content,
-	}
 }

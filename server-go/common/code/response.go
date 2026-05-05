@@ -1,13 +1,11 @@
-package controller
-
-import "github.com/yuanji6666/gopherAI/common/code"
+package code
 
 type Response struct {
-	StatusCode	code.Code	`json:"status_code"`
+	StatusCode	Code	`json:"status_code"`
 	StatusMsg	string		`json:"status_msg,omitempty"`
 }
 
-func (r *Response) CodeOf(code code.Code) Response {
+func (r *Response) CodeOf(code Code) Response {
 	//自动处理空指针
 	if r == nil {
 		r = new(Response)
@@ -19,5 +17,5 @@ func (r *Response) CodeOf(code code.Code) Response {
 }
 
 func (r *Response) Success(){
-	r.CodeOf(code.CodeSuccess)
+	r.CodeOf(CodeSuccess)
 }

@@ -7,13 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/yuanji6666/gopherAI/config"
-	"github.com/yuanji6666/gopherAI/schema"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
-
-
 
 var DB *gorm.DB //全局实例
 
@@ -65,18 +62,11 @@ func InitMysql() error {
 
 	DB = db
 
-	return migration()
+	return nil
 
 }
 
-// migration 自动迁移
-// 检查数据库中是否存在这些模型对应的表。如果表不存在，则创建；
-// 如果存在，则根据结构体字段添加新列（不会删除现有列或数据）。这确保数据库表结构与Go代码中的模型保持同步。
-func migration() error {
-	return DB.AutoMigrate(
-		new(schema.User),
-		new(schema.Message),
-		new(schema.Session),
-		new(schema.KnowledgeBase),
-	)
+// RunMigration 运行数据库迁移，接受模型列表以避免与 domain 包产生循环依赖
+func RunMigration(models ...interface{}) error {
+    return DB.AutoMigrate(models...)
 }

@@ -3,32 +3,29 @@ package kb
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/yuanji6666/gopherAI/common/code"
-	"github.com/yuanji6666/gopherAI/controller"
-	"github.com/yuanji6666/gopherAI/service/kb"
-	"github.com/yuanji6666/gopherAI/schema"
 )
 
-type(
+// Handler HTTP处理层
+
+type (
 	GetKnowledgeBaseListRequest struct {
 		Username string `json:"username" binding:"required"`
 	}
 	GetKnowledgeBaseListResponse struct {
-		controller.Response
-		KnowledgeBaseList []schema.KnowledgeBaseInfo `json:"knowledge_base_list"`
+		code.Response
+		KnowledgeBaseList []KnowledgeBaseInfo `json:"knowledge_base_list"`
 	}
 	CreateKnowledgeBaseRequest struct {
 		Username string `json:"username" binding:"required"`
-		KBname string `json:"kb_name" binding:"required"`
+		KBname   string `json:"kb_name" binding:"required"`
 	}
 	CreateKnowledgeBaseResponse struct {
-		controller.Response
-		schema.KnowledgeBaseInfo `json:"knowledge_base_info,omitempty"`
+		code.Response
+		KnowledgeBaseInfo `json:"knowledge_base_info,omitempty"`
 	}
-	
 )
 
-
-
+// GetKnowledgeBaseList 获取用户知识库列表
 func GetKnowledgeBaseList(c *gin.Context) {
 	res := new(GetKnowledgeBaseListResponse)
 
@@ -38,18 +35,19 @@ func GetKnowledgeBaseList(c *gin.Context) {
 		return
 	}
 
-	kbList, err := kb.GetKnowledgeBaseInfoList(username)
-	if err != code.CodeSuccess{
+	kbList, err := GetKnowledgeBaseInfoList(username)
+	if err != code.CodeSuccess {
 		c.JSON(200, res.CodeOf(err))
 		return
 	}
-	
+
 	res.KnowledgeBaseList = kbList
 	res.Success()
 	c.JSON(200, res)
 }
 
-func CreateKnowledgeBase(c *gin.Context) {
+// CreateKnowledgeBase 创建新的知识库
+func CreateNewKnowledgeBase(c *gin.Context) {
 	req := new(CreateKnowledgeBaseRequest)
 	res := new(CreateKnowledgeBaseResponse)
 
@@ -58,7 +56,7 @@ func CreateKnowledgeBase(c *gin.Context) {
 		return
 	}
 
-	kbInfo, err := kb.CreateKnowledgeBase(req.Username, req.KBname)
+	kbInfo, err := CreateKB(req.Username, req.KBname)
 	if err != code.CodeSuccess {
 		c.JSON(200, res.CodeOf(err))
 		return
@@ -67,5 +65,4 @@ func CreateKnowledgeBase(c *gin.Context) {
 	res.KnowledgeBaseInfo = kbInfo
 	res.Success()
 	c.JSON(200, res)
-
 }

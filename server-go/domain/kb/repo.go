@@ -3,11 +3,13 @@ package kb
 import (
 	"github.com/google/uuid"
 	"github.com/yuanji6666/gopherAI/common/mysql"
-	"github.com/yuanji6666/gopherAI/schema"
 )
 
-func GetKnowledgeBaseByUsername(username string) ([]schema.KnowledgeBase, error) {
-	var kb []schema.KnowledgeBase
+// Repository 数据访问层
+
+// GetKnowledgeBaseByUsername 获取用户的所有知识库
+func GetKnowledgeBaseByUsername(username string) ([]KnowledgeBase, error) {
+	var kb []KnowledgeBase
 	println(username)
 	err := mysql.DB.Where("username = ?", username).Find(&kb).Error
 	if err != nil {
@@ -17,8 +19,9 @@ func GetKnowledgeBaseByUsername(username string) ([]schema.KnowledgeBase, error)
 	return kb, nil
 }
 
+// CreateKnowledgeBase 创建新的知识库
 func CreateKnowledgeBase(username string, kbName string) (UserKBID string, err error) {
-	kb := schema.KnowledgeBase{
+	kb := KnowledgeBase{
 		UserKBID: uuid.New().String(),
 		Username: username,
 		Name:     kbName,

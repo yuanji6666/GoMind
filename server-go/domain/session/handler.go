@@ -5,52 +5,58 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/yuanji6666/gopherAI/common/code"
-	"github.com/yuanji6666/gopherAI/controller"
-	"github.com/yuanji6666/gopherAI/schema"
-	daoSession "github.com/yuanji6666/gopherAI/dao/session"
-	serviceSession "github.com/yuanji6666/gopherAI/service/session"
-	serviceMessage "github.com/yuanji6666/gopherAI/service/message"
-
-
+	"github.com/yuanji6666/gopherAI/domain/message"
 )
-type(
-	GetUserSessionsByUserNameRequest struct{
+
+// Handler HTTP处理层
+
+type (
+	// GetUserSessionsByUserNameRequest 获取用户会话列表请求
+	GetUserSessionsByUserNameRequest struct {
 		UserName string `json:"username" binding:"required"`
 	}
-	GetUserSessionsByUserNameResponse struct{
-		controller.Response
-		Sessions []schema.SessionInfo `json:"sessions,omitempty"`
+	// GetUserSessionsByUserNameResponse 获取用户会话列表响应
+	GetUserSessionsByUserNameResponse struct {
+		code.Response
+		Sessions []SessionInfo `json:"sessions,omitempty"`
 	}
-	CreateNewSessionAndSendMessageRequest struct{
-		UserName string `json:"username" binding:"required"`
+	// CreateNewSessionAndSendMessageRequest 创建新会话并发送消息请求
+	CreateNewSessionAndSendMessageRequest struct {
+		UserName     string `json:"username" binding:"required"`
 		UserQuestion string `json:"user_question" binding:"required"`
-		UserKBID string `json:"user_kb_id" binding:"required"`
+		UserKBID     string `json:"user_kb_id" binding:"required"`
 	}
-	CreateNewSessionAndSendMessageResponse struct{
-		controller.Response
-		Answer string `json:"answer"`
+	// CreateNewSessionAndSendMessageResponse 创建新会话并发送消息响应
+	CreateNewSessionAndSendMessageResponse struct {
+		code.Response
+		Answer    string `json:"answer"`
 		SessionID string `json:"session_id"`
 	}
-	SendMessageRequest struct{
-		SessionID string `json:"session_id" binding:"required"`
+	// SendMessageRequest 发送消息请求
+	SendMessageRequest struct {
+		SessionID    string `json:"session_id" binding:"required"`
 		UserQuestion string `json:"user_question" binding:"required"`
 	}
-	SendMessageResponse struct{
-		controller.Response
+	// SendMessageResponse 发送消息响应
+	SendMessageResponse struct {
+		code.Response
 		Answer string `json:"answer"`
 	}
-	GetHistoryBySessionIDWithIDRequest struct{
+	// GetHistoryBySessionIDWithIDRequest 获取会话历史请求
+	GetHistoryBySessionIDWithIDRequest struct {
 		SessionID string `json:"session_id" binding:"required"`
 		// last_id=0 表示从最早一条开始；required 会把数值 0 判为未填，故不能用 required
 		LastID int64 `json:"last_id" binding:"gte=0"`
 		Limit  int   `json:"limit" binding:"required,gte=1"`
 	}
-	GetHistoryBySessionIDWithIDResponse struct{
-		controller.Response
-		History []schema.History `json:"history"`
+	// GetHistoryBySessionIDWithIDResponse 获取会话历史响应
+	GetHistoryBySessionIDWithIDResponse struct {
+		code.Response
+		History []message.History `json:"history"`
 	}
 )
 
+// GetUserSessionsByUserName 获取用户会话列表
 func GetUserSessionsByUserName(c *gin.Context) {
 	var res GetUserSessionsByUserNameResponse
 
@@ -60,18 +66,18 @@ func GetUserSessionsByUserName(c *gin.Context) {
 		return
 	}
 
-	sessions, err := daoSession.GetSessionByUsername(username)
+	sessions, err := GetSessionByUsername(username)
 	if err != nil {
 		c.JSON(http.StatusOK, res.CodeOf(code.CodeServerBusy))
 		return
 	}
 
-	var sessionInfos []schema.SessionInfo
+	var sessionInfos []SessionInfo
 	for _, session := range sessions {
-		sessionInfos = append(sessionInfos, schema.SessionInfo{
-			Title: session.Title,
+		sessionInfos = append(sessionInfos, SessionInfo{
+			Title:     session.Title,
 			SessionID: session.ID,
-			UserKBID: session.UserKBID,
+			UserKBID:  session.UserKBID,
 		})
 	}
 	res.Sessions = sessionInfos
@@ -79,7 +85,8 @@ func GetUserSessionsByUserName(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func CreateNewSessionAndSendMessage(c *gin.Context) {
+// CreateNewSessionAndSendMessage 创建新会话并发送消息
+func CreateNewSessionAndSendMessageHandler(c *gin.Context) {
 	var req CreateNewSessionAndSendMessageRequest
 	var res CreateNewSessionAndSendMessageResponse
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -87,7 +94,7 @@ func CreateNewSessionAndSendMessage(c *gin.Context) {
 		return
 	}
 
-	sessionID, answer, err := serviceSession.CreateNewSessionAndSendMessage(req.UserName, req.UserQuestion, req.UserKBID)
+	sessionID, answer, err := CreateNewSessionAndSendMessage(req.UserName, req.UserQuestion, req.UserKBID)
 	if err != code.CodeSuccess {
 		c.JSON(http.StatusOK, res.CodeOf(err))
 		return
@@ -99,14 +106,15 @@ func CreateNewSessionAndSendMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func SendMessage(c *gin.Context) {
+// SendMessageHandler 发送消息
+func SendMessageHandler(c *gin.Context) {
 	var req SendMessageRequest
 	var res SendMessageResponse
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusOK, code.CodeInvalidParams)
 		return
 	}
-	answer, err := serviceSession.SendMessage(req.UserQuestion, req.SessionID)
+	answer, err := SendMessage(req.UserQuestion, req.SessionID)
 	if err != code.CodeSuccess {
 		c.JSON(http.StatusOK, res.CodeOf(err))
 		return
@@ -116,18 +124,19 @@ func SendMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func GetHistoryBySessionIDWithID(c *gin.Context) {
+// GetHistoryBySessionIDWithIDHandler 获取会话历史
+func GetHistoryBySessionIDWithIDHandler(c *gin.Context) {
 	var req GetHistoryBySessionIDWithIDRequest
 	var res GetHistoryBySessionIDWithIDResponse
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusOK, res.CodeOf(code.CodeInvalidParams))
 		return
 	}
-	history, err := serviceMessage.GetHistoryBySessionIDWithID(req.SessionID, req.LastID, req.Limit)
+	history, err := message.GetHistoryBySessionIDWithID(req.SessionID, req.LastID, req.Limit)
 	if err != code.CodeSuccess {
 		c.JSON(http.StatusOK, res.CodeOf(err))
 		return
-	}	
+	}
 
 	res.History = history
 	res.Success()

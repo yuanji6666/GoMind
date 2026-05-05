@@ -4,41 +4,41 @@ import (
 	"github.com/yuanji6666/gopherAI/common/code"
 	myemail "github.com/yuanji6666/gopherAI/common/email"
 	"github.com/yuanji6666/gopherAI/common/redis"
-	"github.com/yuanji6666/gopherAI/dao/user"
-	"github.com/yuanji6666/gopherAI/schema"
 	"github.com/yuanji6666/gopherAI/utils"
 	"github.com/yuanji6666/gopherAI/utils/myjwt"
 )
 
+// Service 业务逻辑层
+
+// Register 注册新用户
 func Register(email, password, captcha string) (string, code.Code) {
-
 	var ok bool
-	var userInformation *schema.User
+	var userInformation *User
 
-	//判断用户是否存在
-	if exist, _ := user.IsExistUser(email); exist {
+	// 判断用户是否存在
+	if exist, _ := IsExistUser(email); exist {
 		return "", code.CodeUserExist
 	}
 
-	//检查验证码
+	// 检查验证码
 	if ok, _ := redis.CheckCaptchaForEmail(email, captcha); !ok {
 		return "", code.CodeInvalidCaptcha
 	}
 
-	//初始用户名11位随机数
+	// 初始用户名11位随机数
 	username := utils.GetRandomNumbers(11)
 
-	//调dao层register加入数据库
-	if userInformation, ok = user.Register(username, email, password); !ok {
+	// 调 repo 层 register 加入数据库
+	if userInformation, ok = RegisterUser(username, email, password); !ok {
 		return "", code.CodeServerBusy
 	}
 
-	//把用户名发给用户邮箱
+	// 把用户名发给用户邮箱
 	if err := myemail.SendCaptcha(email, username, myemail.UserNameMsg); err != nil {
 		return "", code.CodeServerBusy
 	}
 
-	//根据id和用户名生成token
+	// 根据 id 和用户名生成 token
 	token, err := myjwt.GenerateJwt(int64(userInformation.ID), userInformation.Username)
 
 	if err != nil {
@@ -46,14 +46,14 @@ func Register(email, password, captcha string) (string, code.Code) {
 	}
 
 	return token, code.CodeSuccess
-
 }
 
+// Login 用户登录
 func Login(username, password string) (string, code.Code) {
-	userInformation := new(schema.User)
+	userInformation := new(User)
 	var ok bool
 
-	if ok, userInformation = user.IsExistUser(username); !ok {
+	if ok, userInformation = IsExistUser(username); !ok {
 		return "", code.CodeUserNotExist
 	}
 
@@ -70,6 +70,7 @@ func Login(username, password string) (string, code.Code) {
 	return token, code.CodeSuccess
 }
 
+// SendCaptcha 发送验证码邮件
 func SendCaptcha(email string) code.Code {
 	sendCode := utils.GetRandomNumbers(6)
 

@@ -1,7 +1,10 @@
-package schema
+package user
 
 import "gorm.io/gorm"
 
+// Entity 模型
+
+// User 用户实体
 type User struct {
 	gorm.Model
 	Name     string `gorm:"type:varchar(50)" json:"name"`

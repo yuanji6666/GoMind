@@ -4,29 +4,33 @@ import (
 	"slices"
 
 	"github.com/yuanji6666/gopherAI/common/mysql"
-	"github.com/yuanji6666/gopherAI/schema"
 )
 
-func CreateMessage(msg *schema.Message) (*schema.Message, error) {
+// Repository 数据访问层
+
+// CreateMessage 创建新消息
+func CreateMessage(msg *Message) (*Message, error) {
 	err := mysql.DB.Create(msg).Error
 	return msg, err
 }
 
-func GetAllMessages() ([]schema.Message, error) {
-	var msgs []schema.Message
+// GetAllMessages 获取所有消息
+func GetAllMessages() ([]Message, error) {
+	var msgs []Message
 	err := mysql.DB.Order("created_at asc").Find(&msgs).Error
 	return msgs, err
 }
 
-func GetMessagesBySessionID(sessionID string, lastID int64, limit int) (msgs []schema.Message, err error) {
+// GetMessagesBySessionID 根据会话ID获取消息
+func GetMessagesBySessionID(sessionID string, lastID int64, limit int) (msgs []Message, err error) {
 	db := mysql.DB.Where("session_id = ?", sessionID)
-	
+
 	if lastID > 0 {
 		db = db.Where("id < ?", lastID)
 	}
-	
+
 	err = db.Order("id DESC").Limit(limit).Find(&msgs).Error
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -35,8 +39,8 @@ func GetMessagesBySessionID(sessionID string, lastID int64, limit int) (msgs []s
 	return
 }
 
-func GetMessagesBySessionIDs(sessionIDs []string) (msgs []schema.Message, err error) {
+// GetMessagesBySessionIDs 根据多个会话ID获取消息
+func GetMessagesBySessionIDs(sessionIDs []string) (msgs []Message, err error) {
 	err = mysql.DB.Where("session_id IN ?", sessionIDs).Order("created_at asc").Find(&msgs).Error
 	return
 }
-
