@@ -1,11 +1,10 @@
-package session
+package ai_session
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yuanji6666/gopherAI/common/code"
-	"github.com/yuanji6666/gopherAI/domain/message"
 )
 
 // Handler HTTP处理层
@@ -52,7 +51,7 @@ type (
 	// GetHistoryBySessionIDWithIDResponse 获取会话历史响应
 	GetHistoryBySessionIDWithIDResponse struct {
 		code.Response
-		History []message.History `json:"history"`
+		History []History `json:"history"`
 	}
 )
 
@@ -132,7 +131,7 @@ func GetHistoryBySessionIDWithIDHandler(c *gin.Context) {
 		c.JSON(http.StatusOK, res.CodeOf(code.CodeInvalidParams))
 		return
 	}
-	history, err := message.GetHistoryBySessionIDWithID(req.SessionID, req.LastID, req.Limit)
+	history, err := GetHistoryBySessionIDWithID(req.SessionID, req.LastID, req.Limit)
 	if err != code.CodeSuccess {
 		c.JSON(http.StatusOK, res.CodeOf(err))
 		return

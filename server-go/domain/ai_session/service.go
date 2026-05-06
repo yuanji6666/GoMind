@@ -1,4 +1,4 @@
-package session
+package ai_session
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"github.com/yuanji6666/gopherAI/common/code"
 	"github.com/yuanji6666/gopherAI/common/redis"
 	"github.com/yuanji6666/gopherAI/config"
-	"github.com/yuanji6666/gopherAI/domain/message"
 	"resty.dev/v3"
 )
 
@@ -66,12 +65,12 @@ func CreateNewSessionAndSendMessage(userName, userQuestion, userKBID string) (st
 	key := "session:" + newSession.ID
 	ctx := context.Background()
 
-	userMsg, err := json.Marshal(message.History{
+	userMsg, err := json.Marshal(History{
 		Role:    "user",
 		Content: userQuestion,
 	})
 
-	assistantMsg, err := json.Marshal(message.History{
+	assistantMsg, err := json.Marshal(History{
 		Role:    "assistant",
 		Content: answer.Answer,
 	})
@@ -86,14 +85,14 @@ func CreateNewSessionAndSendMessage(userName, userQuestion, userKBID string) (st
 	}()
 	// 消息持久化到数据库
 	go func() {
-		message.CreateMessage(&message.Message{
+		CreateMessage(&Message{
 			SessionID: newSession.ID,
 			UserName:  userName,
 			Content:   userQuestion,
 			IsUser:    true,
 		})
 
-		message.CreateMessage(&message.Message{
+		CreateMessage(&Message{
 			SessionID: newSession.ID,
 			UserName:  userName,
 			Content:   answer.Answer,
@@ -128,7 +127,7 @@ func SendMessage(userQuestion, SessionID string) (string, code.Code) {
 		}
 	} else {
 		// 缓存未命中，从数据库获取历史消息
-		messages, err := message.GetMessagesBySessionID(SessionID, math.MaxInt64, 10)
+		messages, err := GetMessagesBySessionID(SessionID, math.MaxInt64, 10)
 		if err != nil {
 			log.Println("GetMessagesBySessionID error:", err)
 			return "", code.CodeServerBusy
@@ -175,11 +174,11 @@ func SendMessage(userQuestion, SessionID string) (string, code.Code) {
 	ctx := context.Background()
 
 	go func() {
-		userMsg, _ := json.Marshal(message.History{
+		userMsg, _ := json.Marshal(History{
 			Role:    "user",
 			Content: userQuestion,
 		})
-		assistantMsg, _ := json.Marshal(message.History{
+		assistantMsg, _ := json.Marshal(History{
 			Role:    "assistant",
 			Content: answer.Answer,
 		})
@@ -192,14 +191,14 @@ func SendMessage(userQuestion, SessionID string) (string, code.Code) {
 
 	// 消息持久化到数据库
 	go func() {
-		message.CreateMessage(&message.Message{
+		CreateMessage(&Message{
 			SessionID: SessionID,
 			UserName:  sessionEntity.UserName,
 			Content:   userQuestion,
 			IsUser:    true,
 		})
 
-		message.CreateMessage(&message.Message{
+		CreateMessage(&Message{
 			SessionID: SessionID,
 			UserName:  sessionEntity.UserName,
 			Content:   answer.Answer,
@@ -208,4 +207,29 @@ func SendMessage(userQuestion, SessionID string) (string, code.Code) {
 	}()
 
 	return answer.Answer, code.CodeSuccess
+}
+
+// GetHistoryBySessionIDWithID 根据会话ID和消息ID获取历史记录
+func GetHistoryBySessionIDWithID(sessionID string, lastID int64, limit int) ([]History, code.Code) {
+	msgs, err := GetMessagesBySessionID(sessionID, lastID, limit)
+
+	if err != nil {
+		return nil, code.CodeServerBusy
+	}
+
+	history := make([]History, len(msgs))
+
+	for i, msg := range msgs {
+		role := "assistant"
+		if msg.IsUser {
+			role = "user"
+		}
+		history[i] = History{
+			ID:      msg.ID,
+			Role:    role,
+			Content: msg.Content,
+		}
+	}
+
+	return history, code.CodeSuccess
 }

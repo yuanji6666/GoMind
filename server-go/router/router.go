@@ -17,7 +17,6 @@ func InitRouter() *gin.Engine {
 	{
 		AIGroup := enterRouter.Group("/AI")
 		AIGroup.Use(auth.Auth())
-		RegisterKBRouter(AIGroup)
 		RegisterSessionRouter(AIGroup)
 	}
 

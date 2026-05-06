@@ -3,6 +3,7 @@ module github.com/yuanji6666/gopherAI
 go 1.25.4
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v4 v4.5.2
@@ -54,3 +55,5 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )
+
+replace github.com/yuanji6666/gopherAI => ./
