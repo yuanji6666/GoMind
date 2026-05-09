@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/yuanji6666/gopherAI/common/mysql"
@@ -13,6 +14,8 @@ import (
 
 func main() {
 	config.InitConfig()
+	
+	fmt.Println(config.GetConfig().MainConfig.Host)
 
 	if err := mysql.InitMysql(); err != nil {
 		log.Panic("mysql Init error", err)

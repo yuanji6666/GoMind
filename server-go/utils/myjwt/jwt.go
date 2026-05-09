@@ -8,13 +8,13 @@ import (
 )
 
 type Claims struct {
-	ID			int64`json:"id"`
+	ID			uint  `json:"id"`
 	Username	string`json:"username"`
 	jwt.RegisteredClaims
 }
 
 
-func GenerateJwt(id int64, username string)(string, error){
+func GenerateJwt(id uint, username string)(string, error){
 	claims := Claims{
 		ID: id,
 		Username: username,

@@ -34,7 +34,6 @@ func IsExistUser(username string) (bool, *User) {
 func RegisterUser(username, email, password string) (user *User, ok bool) {
 	user, err := InsertUser(&User{
 		Username: username,
-		Name:     username,
 		Email:    email,
 		Password: utils.MD5(password),
 	})

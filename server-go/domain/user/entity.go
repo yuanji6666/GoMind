@@ -7,8 +7,8 @@ import "gorm.io/gorm"
 // User 用户实体
 type User struct {
 	gorm.Model
-	Name     string `gorm:"type:varchar(50)" json:"name"`
 	Email    string `gorm:"type:varchar(100);index" json:"email"`
 	Username string `gorm:"type:varchar(50);uniqueIndex" json:"username"`
+	Nickname string `gorm:"type:varchar(50)" json:"nickname"`
 	Password string `gorm:"type:varchar(255);" json:"-"`
 }

@@ -19,6 +19,12 @@ func InitRouter() *gin.Engine {
 		AIGroup.Use(auth.Auth())
 		RegisterSessionRouter(AIGroup)
 	}
+	{
+		PostGroup := enterRouter
+		PostGroup.Use(auth.Auth())
+		RegisterPostRouter(PostGroup)
+	}
+
 
 	
 	return r
